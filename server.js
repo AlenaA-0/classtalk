@@ -227,6 +227,75 @@ ${ocrText}
   }
 });
 
+// --- 通知智能解析（新增） ---
+app.post('/notice-parse-proxy', async (req, res) => {
+  const userId = req.headers['user-id'] || 'anonymous';
+  const { text, ocrText } = req.body; // text=粘贴的文字, ocrText=图片OCR结果
+
+  try {
+    console.log('🔔 [通知] 开始解析');
+
+    // 如果有图片，先OCR
+    let finalText = '';
+    if (ocrText && ocrText.trim()) {
+      finalText = ocrText.trim();
+    }
+    if (text && text.trim()) {
+      finalText = finalText ? finalText + '\n' + text.trim() : text.trim();
+    }
+
+    if (!finalText) {
+      throw new Error('没有可解析的文字内容，请粘贴通知或上传图片');
+    }
+
+    // AI解析通知内容
+    const aiPrompt = `你是校园通知解析助手。请从以下通知文字中提取关键信息，严格以JSON格式返回（不要添加任何多余文字）：
+{
+  "eventName": "事件名称（简短）",
+  "time": "具体时间（如：2026年7月10日 14:00-18:00）",
+  "location": "地点（如：科技楼报告厅）",
+  "targetAudience": "面向对象（如：全校本科生）",
+  "deadline": "截止时间/报名截止（如没有写"暂无"）",
+  "contact": "联系人（如没有写"暂无"）",
+  "phone": "联系电话（如没有写"暂无"）",
+  "description": "事件详情摘要（50字以内）",
+  "tags": ["标签1","标签2","标签3"]
+}
+
+通知文字：
+${finalText}`;
+
+    const aiResponse = await callDeepSeek([
+      { role: 'system', content: '你是校园通知解析助手，只返回纯JSON对象，不要添加markdown标记或其他多余文字。' },
+      { role: 'user', content: aiPrompt }
+    ]);
+
+    // 清理AI返回中可能包含的markdown标记
+    let cleanResponse = aiResponse.trim();
+    if (cleanResponse.startsWith('```json')) {
+      cleanResponse = cleanResponse.slice(7);
+    }
+    if (cleanResponse.startsWith('```')) {
+      cleanResponse = cleanResponse.slice(3);
+    }
+    if (cleanResponse.endsWith('```')) {
+      cleanResponse = cleanResponse.slice(0, -3);
+    }
+    cleanResponse = cleanResponse.trim();
+
+    const noticeData = JSON.parse(cleanResponse);
+
+    logApiCall(userId, 'notice', 'parse', { text: finalText.substring(0, 200) }, noticeData, 'success');
+
+    console.log('✅ [通知] 解析成功:', noticeData.eventName);
+    res.json({ success: true, ocrText: finalText, data: noticeData });
+  } catch (error) {
+    console.error('❌ [通知] 解析失败:', error);
+    logApiCall(userId, 'notice', 'parse', {}, { error: error.message }, 'error');
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- 讲义总结 ---
 app.post('/lecture-summary-proxy', async (req, res) => {
   const userId = req.headers['user-id'] || 'anonymous';

@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# 如果是目录，添加索引文件
+DirectoryIndex index.html
+
+# 压缩静态资源
+AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
+
+# 启用Gzip压缩
+AddOutputFilterByType DEFLATE application/javascript
+AddOutputFilterByType DEFLATE text/css
+AddOutputFilterByType DEFLATE application/json
+AddOutputFilterByType DEFLATE text/xml

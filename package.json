@@ -1,0 +1,14 @@
+{
+  "name": "classtalk-server",
+  "version": "1.0.0",
+  "description": "课通·校园AI助手 - 后端服务器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "jszip": "^3.10.1"
+  }
+}

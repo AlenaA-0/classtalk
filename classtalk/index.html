@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课通 · 校园AI助手</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Google Fonts - Noto Sans SC for Chinese -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- ====== 精美动态动画封面 v2 ====== -->
+  <div id="splash-screen" class="splash-screen">
+    <canvas id="splash-canvas" class="splash-canvas"></canvas>
+    <div class="splash-content">
+      <div class="splash-logo-wrap" id="splash-logo-wrap">
+        <div class="splash-logo-icon">📚</div>
+        <div class="splash-logo-text">课通</div>
+      </div>
+      <div class="splash-subtitle" id="splash-subtitle"></div>
+      <div class="splash-tagline" id="splash-tagline"></div>
+      <div class="splash-bar-track">
+        <div class="splash-bar-fill" id="splash-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <span class="brand-icon">&#128218;</span>
+        <span class="brand-text">课通 &middot; 校园AI助手</span>
+      </div>
+      <ul class="nav-tabs">
+        <li><a href="#home" class="nav-link active" data-tab="home">&#127968; 首页</a></li>
+        <li><a href="#schedule" class="nav-link" data-tab="schedule">&#128249; 拍课表</a></li>
+        <li><a href="#lecture" class="nav-link" data-tab="lecture">&#128196; 讲义总结</a></li>
+        <li><a href="#notice" class="nav-link" data-tab="notice">&#128227; 通知解析</a></li>
+      <li><a href="#video" class="nav-link" data-tab="video">&#127909; AI视频</a></li>
+      <li><a href="#chat" class="nav-link" data-tab="chat">&#128172; AI对话</a></li>
+    </ul>
+      <div class="nav-actions">
+        <button class="btn-login">登录</button>
+        <button class="btn-register">注册</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- ==================== HOME SECTION ==================== -->
+    <section id="home" class="page-section active">
+      <div class="hero-section">
+        <h1 class="hero-title">&#128249; 拍一张照，校园信息全搞定</h1>
+        <p class="hero-subtitle">「课通」是您的多模态AI效率工具，课程表、讲义、通知，一拍即知</p>
+      </div>
+
+      <!-- Feature Cards Grid -->
+      <div class="feature-grid">
+        <div class="feature-card" data-target="schedule">
+          <div class="card-icon schedule-color">&#128249;</div>
+          <h3 class="card-title">随手拍课表</h3>
+          <p class="card-desc">上传课表截图，AI自动识别课程信息，生成结构化日程</p>
+          <button class="btn-primary btn-card-action">立即体验</button>
+        </div>
+        <div class="feature-card" data-target="lecture">
+          <div class="card-icon lecture-color">&#128196;</div>
+          <h3 class="card-title">讲义变总结</h3>
+          <p class="card-desc">上传讲义照片或PDF，自动生成知识点脑图和重点摘要</p>
+          <button class="btn-primary btn-card-action">立即体验</button>
+        </div>
+        <div class="feature-card" data-target="notice">
+          <div class="card-icon notice-color">&#128227;</div>
+          <h3 class="card-title">通知自动解析</h3>
+          <p class="card-desc">粘贴或截图校园通知，一键提取关键信息并生成事件卡片</p>
+          <button class="btn-primary btn-card-action">立即体验</button>
+        </div>
+        <div class="feature-card" data-target="video">
+          <div class="card-icon video-color">&#127909;</div>
+          <h3 class="card-title">AI视频讲解</h3>
+          <p class="card-desc">基于讲义内容，自动生成知识讲解短视频</p>
+          <button class="btn-primary btn-card-action">立即体验</button>
+        </div>
+      </div>
+
+      <!-- Recent Schedules Preview -->
+      <div class="recent-section">
+        <div class="week-nav-bar">
+          <button class="week-nav-btn" id="btn-prev-week">◀ 上一周</button>
+          <span class="week-nav-label" id="week-nav-label">📅 第1周</span>
+          <button class="week-nav-btn" id="btn-next-week">下一周 ▶</button>
+        </div>
+        <h2 class="section-title" id="weekly-title">📅 本周课表预览</h2>
+        <div class="weekly-grid" id="weekly-grid">
+          <table class="week-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>周一</th>
+                <th>周二</th>
+                <th>周三</th>
+                <th>周四</th>
+                <th>周五</th>
+                <th>周六</th>
+                <th>周日</th>
+              </tr>
+            </thead>
+            <tbody id="weekly-body">
+              <tr>
+                <td class="time-cell">1-2节<br><small>8:00-9:40</small></td>
+                <td class="course-cell" data-course="数据结构"><div class="mini-course"><strong>数据结构</strong><br><small>B301</small></div></td>
+                <td class="course-cell" data-course="操作系统"><div class="mini-course"><strong>操作系统</strong><br><small>A102</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="course-cell" data-course="数据库原理"><div class="mini-course"><strong>数据库原理</strong><br><small>C205</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+              </tr>
+              <tr>
+                <td class="time-cell">3-4节<br><small>10:00-11:40</small></td>
+                <td class="course-cell" data-course="高等数学"><div class="mini-course"><strong>高等数学</strong><br><small>D101</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="course-cell" data-course="大学英语"><div class="mini-course"><strong>大学英语</strong><br><small>E302</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="course-cell" data-course="计算机网络"><div class="mini-course"><strong>计算机网络</strong><br><small>F201</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+              </tr>
+              <tr>
+                <td class="time-cell">5-6节<br><small>14:00-15:40</small></td>
+                <td class="empty-cell"></td>
+                <td class="course-cell" data-course="线性代数"><div class="mini-course"><strong>线性代数</strong><br><small>G103</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="course-cell" data-course="软件工程"><div class="mini-course"><strong>软件工程</strong><br><small>H401</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+              </tr>
+              <tr>
+                <td class="time-cell">7-8节<br><small>16:00-17:40</small></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="course-cell" data-course="概率统计"><div class="mini-course"><strong>概率统计</strong><br><small>I202</small></div></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+                <td class="empty-cell"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI Quick Add Todo -->
+      <div class="recent-section">
+        <h2 class="section-title">🤖 AI快速添加待办</h2>
+        <div class="ai-quick-add">
+          <div class="ai-input-wrapper">
+            <textarea class="ai-quick-textarea" id="home-ai-input" placeholder="试着说：明天上午10点有数据结构作业要交&#10;或者：下周三下午2点去图书馆小组讨论..."></textarea>
+            <button class="btn-primary btn-small" id="btn-home-ai-add">✨ 智能添加</button>
+          </div>
+          <div class="ai-quick-hint">支持自然语言，AI会自动识别时间、事件和内容</div>
+        </div>
+      </div>
+
+      <!-- Recent Events -->
+      <div class="recent-section">
+        <h2 class="section-title">📋 近期待办 <button class="btn-secondary btn-small" id="btn-clear-todos" style="float:right;font-size:12px;">清空</button></h2>
+        <ul class="event-list" id="todo-list">
+          <!-- 动态渲染 -->
+        </ul>
+        <div id="todo-empty" style="text-align:center;color:#999;padding:20px;display:none;">
+          暂无待办事项，用上方AI助手快速添加吧！
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SCHEDULE SECTION ==================== -->
+    <section id="schedule" class="page-section">
+      <div class="section-header">
+        <h2 class="page-title">&#128249; 随手拍课表</h2>
+        <div class="week-nav-bar schedule-week-nav" id="schedule-week-nav" style="display:none;">
+          <button class="week-nav-btn" id="btn-s-prev-week">◀ 上一周</button>
+          <span class="week-nav-label" id="s-week-label">第1周</span>
+          <button class="week-nav-btn" id="btn-s-next-week">下一周 ▶</button>
+        </div>
+      </div>
+
+      <!-- Upload Area -->
+      <div class="upload-area" id="schedule-upload-area">
+        <div class="upload-icon">&#128247;</div>
+        <p class="upload-text">拖拽上传课程表截图，或点击下方按钮</p>
+        <p class="upload-hint">支持 JPG / PNG / WebP，大小不超过 10MB</p>
+        <div class="upload-buttons">
+          <button class="btn-primary" id="btn-camera-upload">&#128247; 拍照上传</button>
+          <button class="btn-secondary" id="btn-file-upload">&#128194; 选择文件</button>
+        </div>
+        <input type="file" id="schedule-file-input" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+
+      <!-- Processing State -->
+      <div class="processing-state" id="schedule-processing" style="display: none;">
+        <div class="spinner"></div>
+        <p>正在调用 Agnes 图像模型识别课表...</p>
+      </div>
+
+      <!-- Source Image Preview -->
+      <div class="image-preview-section" id="schedule-preview-section" style="display: none;">
+        <h3 class="preview-title">原图预览</h3>
+        <div class="preview-image-container">
+          <img id="schedule-preview-img" src="" alt="课表原图">
+        </div>
+        <button class="btn-danger btn-small" id="btn-clear-preview">&#10005; 清除重选</button>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="schedule-results" style="display: none;">
+        <div class="results-header">
+          <h3 id="schedule-result-count">&#9989; 解析完成！共识别 <span>0</span> 门课程</h3>
+          <div class="result-actions">
+            <button class="btn-secondary" id="btn-view-toggle">&#128200; 切换视图</button>
+            <button class="btn-success" id="btn-save-schedule">&#128190; 保存课表</button>
+            <button class="btn-info" id="btn-export-ics">&#128228; 导出为iCal</button>
+          </div>
+        </div>
+
+        <!-- Weekly Grid View -->
+        <div class="view-container" id="grid-view">
+          <table class="week-table large">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>周一</th>
+                <th>周二</th>
+                <th>周三</th>
+                <th>周四</th>
+                <th>周五</th>
+                <th>周六</th>
+                <th>周日</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-grid-body"></tbody>
+          </table>
+        </div>
+
+        <!-- List View (hidden by default) -->
+        <div class="view-container" id="list-view" style="display: none;">
+          <div class="course-list" id="schedule-course-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== LECTURE SECTION ==================== -->
+    <section id="lecture" class="page-section">
+      <div class="section-header">
+        <h2 class="page-title">&#128196; 讲义变总结</h2>
+      </div>
+
+      <!-- Upload Area -->
+      <div class="upload-area" id="lecture-upload-area">
+        <div class="upload-icon">&#128196;</div>
+        <p class="upload-text">拖拽上传讲义（PDF或图片）</p>
+        <p class="upload-hint">支持 PDF / PPTX / JPG / PNG / WebP，支持批量上传<br>⚠️ 不支持旧版.ppt格式，请转为.pptx或PDF</p>
+        <div class="upload-buttons">
+          <button class="btn-primary" id="btn-lecture-files">&#128194; 选择文件</button>
+        </div>
+        <input type="file" id="lecture-file-input" accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.bmp,.webp" multiple hidden>
+      </div>
+
+      <!-- File List -->
+      <div class="file-list-section" id="lecture-file-list" style="display: none;">
+        <h3 class="list-title">已选择的文件：</h3>
+        <ul class="file-list" id="lecture-ul"></ul>
+        <button class="btn-primary" id="btn-start-summarize">&#129302; 开始总结</button>
+      </div>
+
+      <!-- Processing State -->
+      <div class="processing-state" id="lecture-processing" style="display: none;">
+        <div class="progress-steps">
+          <div class="progress-step active" id="step-ocr">
+            <span class="step-icon">&#128247;</span>
+            <p>正在识别文字...</p>
+          </div>
+          <div class="progress-step" id="step-summary">
+            <span class="step-icon">&#129302;</span>
+            <p>正在生成总结...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="lecture-results" style="display: none;">
+        <div class="results-header">
+          <h3 id="lecture-file-info">&#128196; 文件：数据结构_第3章_栈和队列.pdf</h3>
+          <p id="lecture-meta">总页数：32页 | 处理时间：8秒</p>
+        </div>
+
+        <div class="lecture-results-grid">
+          <!-- Mind Map Section -->
+          <div class="result-panel mindmap-panel">
+            <h3 class="panel-title">&#129302; 核心知识点脑图</h3>
+            <div class="mindmap-content" id="mindmap-content"></div>
+          </div>
+
+          <!-- Key Summary Section -->
+          <div class="result-panel summary-panel">
+            <h3 class="panel-title">&#128225; 重点摘要</h3>
+            <div class="summary-content" id="summary-content"></div>
+          </div>
+
+          <!-- Terminology Table Section -->
+          <div class="result-panel terms-panel">
+            <h3 class="panel-title">&#128218; 关键术语表</h3>
+            <div class="terms-content" id="terms-content"></div>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button class="btn-secondary" id="btn-export-md">&#128196; 导出Markdown</button>
+          <button class="btn-info" id="btn-export-pdf">&#128194; 导出PDF</button>
+          <button class="btn-warning" id="btn-generate-video">&#127909; 生成讲解视频</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== NOTICE SECTION ==================== -->
+    <section id="notice" class="page-section">
+      <div class="section-header">
+        <h2 class="page-title">&#128227; 通知自动解析</h2>
+      </div>
+
+      <!-- Input Method Selector -->
+      <div class="input-method-tabs">
+        <button class="tab-btn active" data-method="text">&#128221; 文本粘贴</button>
+        <button class="tab-btn" data-method="image">&#128247; 上传图片</button>
+      </div>
+
+      <!-- Text Input Mode -->
+      <div class="input-mode active" id="text-input-mode">
+        <textarea class="notice-textarea" id="notice-text-input" placeholder="请在此粘贴校园通知内容...&#10;&#10;例如：&#10;关于举办2026年大学生程序设计竞赛的通知&#10;时间：2026年7月10日 14:00-18:00&#10;地点：科技楼报告厅&#10;面向对象：全校本科生&#10;报名截止：2026年7月5日&#10;联系人：张老师 电话：138-0000-0000"></textarea>
+        <button class="btn-primary" id="btn-parse-notice-text">&#128227; 解析通知</button>
+      </div>
+
+      <!-- Image Input Mode -->
+      <div class="input-mode" id="image-input-mode">
+        <div class="upload-area notice-upload-area">
+          <div class="upload-icon">&#128247;</div>
+          <p class="upload-text">拖拽上传通知截图，或点击选择</p>
+          <div class="upload-buttons">
+            <button class="btn-primary" id="btn-notice-file">&#128194; 选择文件</button>
+          </div>
+          <input type="file" id="notice-file-input" accept="image/jpeg,image/png,image/webp" hidden>
+        </div>
+        <div class="notice-image-preview" id="notice-image-preview" style="display: none;">
+          <img id="notice-preview-img" src="" alt="通知截图">
+          <button class="btn-danger btn-small" id="btn-clear-notice-preview">&#10005; 清除</button>
+        </div>
+        <button class="btn-primary" id="btn-parse-notice-image" style="display: none;">&#128227; 解析通知</button>
+      </div>
+
+      <!-- Processing State -->
+      <div class="processing-state" id="notice-processing" style="display: none;">
+        <div class="spinner"></div>
+        <p>正在解析通知内容...</p>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="notice-results" style="display: none;">
+        <h3 class="results-title">&#9989; 解析完成！</h3>
+        <div class="event-card" id="event-card-display"></div>
+        <div class="result-actions">
+          <button class="btn-success" id="btn-add-calendar">&#128197; 添加到日程</button>
+          <button class="btn-secondary" id="btn-copy-event">&#128203; 复制信息</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIDEO SECTION ==================== -->
+    <section id="video" class="page-section">
+      <div class="section-header">
+        <h2 class="page-title">&#127909; AI视频讲解生成</h2>
+      </div>
+
+      <div class="video-intro">
+        <p>基于讲义总结的知识点，自动生成知识讲解短视频（5-10分钟），帮助您高效复习。</p>
+      </div>
+
+      <!-- Knowledge Input -->
+      <div class="video-input-area">
+        <h3 class="section-label">请输入知识点内容或选择历史讲义</h3>
+        <textarea class="video-textarea" id="video-text-input" placeholder="请粘贴讲义总结内容或知识点描述..."></textarea>
+        
+        <div class="history-select">
+          <label>或从历史讲义选择：</label>
+          <select class="history-dropdown" id="history-lecture-select">
+            <option value="">-- 请选择 --</option>
+            <option value="1">数据结构_第3章_栈和队列.pdf</option>
+            <option value="2">高等数学_第5章_微积分.pdf</option>
+            <option value="3">操作系统_进程管理.pdf</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Video Generation Controls -->
+      <div class="video-controls">
+        <label>视频时长：</label>
+        <select class="duration-select" id="video-duration">
+          <option value="3">3分钟</option>
+          <option value="5" selected>5分钟</option>
+          <option value="8">8分钟</option>
+          <option value="10">10分钟</option>
+        </select>
+        <button class="btn-primary" id="btn-generate-video-content">&#127909; 开始生成视频</button>
+        <button class="btn-secondary" id="btn-diagnose-video" style="margin-left:10px;">🔍 诊断</button>
+      </div>
+
+      <!-- Processing State -->
+      <div class="processing-state" id="video-processing" style="display: none;">
+        <div class="video-progress">
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="video-progress-bar" style="width: 0%;"></div>
+          </div>
+          <p class="progress-percentage" id="video-progress-text">0%</p>
+          <p class="progress-detail" id="video-progress-detail">正在拆解分镜脚本...</p>
+        </div>
+      </div>
+
+      <!-- Video Result -->
+      <div class="video-result-section" id="video-result" style="display: none;">
+        <h3 class="results-title">&#9989; 视频生成完成！</h3>
+        <div class="video-player-wrapper">
+          <div class="video-placeholder" id="video-placeholder">
+            <div class="play-button">&#9654;</div>
+            <p>知识讲解视频已生成（模拟播放）</p>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn-primary" id="btn-download-video">&#128230; 下载视频</button>
+          <button class="btn-secondary" id="btn-share-video">&#128279; 分享链接</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== CHAT SECTION ==================== -->
+    <section id="chat" class="page-section">
+      <div class="section-header">
+        <h2 class="page-title">&#128172; AI校园助手</h2>
+      </div>
+
+      <div class="chat-container" id="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message bot-message">
+            <div class="message-avatar bot-avatar">&#129302;</div>
+            <div class="message-content">
+              <div class="message-bubble">
+                <p>你好！我是课通AI校园助手，有任何校园问题都可以问我哦～</p>
+              </div>
+              <span class="message-time">刚刚</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <textarea class="chat-textarea" id="chat-input" placeholder="输入你的问题..." rows="3"></textarea>
+          <div class="chat-input-actions">
+            <button class="btn-primary" id="btn-send-chat">&#10148; 发送</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>&copy; 2026 课通 · 校园AI助手</p>
+      <p class="footer-note">Powered by DeepSeek API &middot; 湘ICP备XXXXX号</p>
+    </div>
+  </footer>
+
+  <!-- Course Detail Popup -->
+  <div class="course-popup-overlay" id="course-popup-overlay">
+    <div class="course-popup" id="course-popup">
+      <div class="popup-header">
+        <h3 id="popup-course-name">课程名称</h3>
+        <button class="popup-close" id="popup-close">&times;</button>
+      </div>
+      <div class="popup-body">
+        <div class="popup-detail-row">
+          <span class="popup-label">&#128197; 星期</span>
+          <span class="popup-value" id="popup-day">-</span>
+        </div>
+        <div class="popup-detail-row">
+          <span class="popup-label">&#128336; 时间段</span>
+          <span class="popup-value" id="popup-period">-</span>
+        </div>
+        <div class="popup-detail-row">
+          <span class="popup-label">&#127970; 教室</span>
+          <span class="popup-value" id="popup-room">-</span>
+        </div>
+        <div class="popup-detail-row">
+          <span class="popup-label">&#128100; 教师</span>
+          <span class="popup-value" id="popup-teacher">-</span>
+        </div>
+      </div>
+      <div class="popup-actions">
+        <button class="btn-primary btn-small" id="popup-ai-help">&#129302; AI课程助手</button>
+        <button class="btn-secondary btn-small" id="popup-close-btn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- PDF.js for PDF text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- Application JavaScript -->
+  <script src="js/splash.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/lecture.js"></script>
+  <script src="js/notice.js"></script>
+  <script src="js/video-full.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>

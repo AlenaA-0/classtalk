@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据历史记录 - 课通 · 校园AI助手</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
+    .header h1 { font-size: 32px; margin-bottom: 10px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
+    .stat-card h3 { font-size: 36px; color: #667eea; margin-bottom: 5px; }
+    .stat-card p { color: #666; font-size: 14px; }
+    .section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .section h2 { font-size: 20px; margin-bottom: 15px; color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #f8f9fa; color: #333; font-weight: 600; }
+    tr:hover { background: #f8f9fa; }
+    .status-success { color: #10b981; font-weight: 600; }
+    .status-error { color: #ef4444; font-weight: 600; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-secondary { background: #e5e7eb; color: #333; }
+    .refresh-btn { float: right; }
+    .empty-state { text-align: center; padding: 40px; color: #999; }
+    .empty-state::before { content: '📭'; display: block; font-size: 48px; margin-bottom: 10px; }
+    pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; max-height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 数据历史记录</h1>
+      <p>课通 · 校园AI助手 - 数据收集与处理证据</p>
+    </div>
+
+    <div class="stats" id="stats-container">
+      <div class="stat-card">
+        <h3 id="stat-total-calls">-</h3>
+        <p>总API调用次数</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="stat-unique-users">-</h3>
+        <p>独立用户数</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="stat-ocr-calls">-</h3>
+        <p>OCR识别次数</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="stat-ai-calls">-</h3>
+        <p>AI对话次数</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>API调用历史 <button class="btn btn-primary refresh-btn" onclick="loadData()">🔄 刷新</button></h2>
+      <div id="logs-container"></div>
+    </div>
+
+    <div class="section">
+      <h2>课表识别历史</h2>
+      <div id="schedules-container"></div>
+    </div>
+
+    <div class="section">
+      <h2>讲义总结历史</h2>
+      <div id="lectures-container"></div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
+      <p>课通 · 校园AI助手 | 数据存储路径: ./data/ | 最后更新: <span id="update-time"></span></p>
+    </div>
+  </div>
+
+  <script>
+    // 加载所有数据
+    async function loadData() {
+      try {
+        // 加载统计数据
+        const statsResponse = await fetch('http://localhost:8080/api/stats');
+        const statsData = await statsResponse.json();
+        
+        if (statsData.success) {
+          document.getElementById('stat-total-calls').textContent = statsData.stats.totalApiCalls || 0;
+          document.getElementById('stat-unique-users').textContent = statsData.stats.uniqueUsers || 0;
+          document.getElementById('stat-ocr-calls').textContent = statsData.stats.callsByModule?.ocr || 0;
+          document.getElementById('stat-ai-calls').textContent = statsData.stats.callsByModule?.ai || 0;
+        }
+
+        // 加载API调用日志
+        const logsResponse = await fetch('http://localhost:8080/api/admin/logs');
+        const logsData = await logsResponse.json();
+        
+        if (logsData.success && logsData.logs.length > 0) {
+          const logsHtml = `
+            <table>
+              <tr>
+                <th>时间</th>
+                <th>用户ID</th>
+                <th>模块</th>
+                <th>操作</th>
+                <th>状态</th>
+                <th>输入摘要</th>
+                <th>输出摘要</th>
+              </tr>
+              ${logsData.logs.slice(-50).reverse().map(log => `
+                <tr>
+                  <td>${new Date(log.timestamp).toLocaleString('zh-CN')}</td>
+                  <td>${log.userId}</td>
+                  <td>${log.module}</td>
+                  <td>${log.action}</td>
+                  <td class="status-${log.status}">${log.status}</td>
+                  <td><pre>${JSON.stringify(log.input).substring(0, 100)}</pre></td>
+                  <td><pre>${JSON.stringify(log.output).substring(0, 100)}</pre></td>
+                </tr>
+              `).join('')}
+            </table>
+          `;
+          document.getElementById('logs-container').innerHTML = logsHtml;
+        } else {
+          document.getElementById('logs-container').innerHTML = '<div class="empty-state">暂无API调用记录</div>';
+        }
+
+        // 加载课表历史
+        const schedulesResponse = await fetch('http://localhost:8080/api/history/schedules?user_id=anonymous');
+        const schedulesData = await schedulesResponse.json();
+        
+        if (schedulesData.success && schedulesData.schedules.length > 0) {
+          const schedulesHtml = `
+            <table>
+              <tr>
+                <th>时间</th>
+                <th>课程数量</th>
+                <th>课程详情</th>
+              </tr>
+              ${schedulesData.schedules.slice(-10).reverse().map(s => `
+                <tr>
+                  <td>${new Date(s.timestamp).toLocaleString('zh-CN')}</td>
+                  <td>${JSON.parse(s.scheduleData).length}</td>
+                  <td><pre>${JSON.stringify(JSON.parse(s.scheduleData), null, 2).substring(0, 200)}</pre></td>
+                </tr>
+              `).join('')}
+            </table>
+          `;
+          document.getElementById('schedules-container').innerHTML = schedulesHtml;
+        } else {
+          document.getElementById('schedules-container').innerHTML = '<div class="empty-state">暂无课表识别记录</div>';
+        }
+
+        // 加载讲义历史
+        const lecturesResponse = await fetch('http://localhost:8080/api/history/lectures?user_id=anonymous');
+        const lecturesData = await lecturesResponse.json();
+        
+        if (lecturesData.success && lecturesData.lectures.length > 0) {
+          const lecturesHtml = `
+            <table>
+              <tr>
+                <th>时间</th>
+                <th>文件名</th>
+                <th>OCR文字长度</th>
+                <th>总结摘要</th>
+              </tr>
+              ${lecturesData.lectures.slice(-10).reverse().map(l => `
+                <tr>
+                  <td>${new Date(l.timestamp).toLocaleString('zh-CN')}</td>
+                  <td>${l.fileName}</td>
+                  <td>${l.ocrText?.length || 0} 字符</td>
+                  <td><pre>${JSON.stringify(l.summary).substring(0, 200)}</pre></td>
+                </tr>
+              `).join('')}
+            </table>
+          `;
+          document.getElementById('lectures-container').innerHTML = lecturesHtml;
+        } else {
+          document.getElementById('lectures-container').innerHTML = '<div class="empty-state">暂无讲义总结记录</div>';
+        }
+
+        document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN');
+
+      } catch (error) {
+        console.error('加载数据失败:', error);
+        alert('加载数据失败！请确保服务器正在运行 (http://localhost:8080)');
+      }
+    }
+
+    // 页面加载时自动加载数据
+    window.addEventListener('DOMContentLoaded', loadData);
+  </script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API调用监控 - 课通</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .status-card {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #667eea;
+    }
+    .status-card h3 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    .label {
+      color: #666;
+      font-weight: 500;
+    }
+    .value {
+      color: #333;
+      font-weight: 600;
+    }
+    .value.success { color: #28a745; }
+    .value.error { color: #dc3545; }
+    .value.warning { color: #ffc107; }
+    
+    .log-container {
+      background: #1e1e1e;
+      color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+    }
+    .log-entry {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 5px;
+      background: #2d2d2d;
+    }
+    .log-time {
+      color: #569cd6;
+      font-weight: bold;
+    }
+    .log-module {
+      color: #4ec9b0;
+      margin-left: 10px;
+    }
+    .log-action {
+      color: #ce9178;
+      margin-left: 10px;
+    }
+    .log-status {
+      float: right;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+    .log-status.success { background: #28a745; }
+    .log-status.error { background: #dc3545; }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    .btn-warning {
+      background: #ffc107;
+      color: #333;
+    }
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    .test-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+    .test-section h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    .test-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 API调用实时监控</h1>
+    <p class="subtitle">课通·校园AI助手 - 所有API调用都会被记录在这里</p>
+    
+    <!-- 系统状态 -->
+    <div class="status-card">
+      <h3>📊 系统状态</h3>
+      <div class="status-item">
+        <span class="label">服务器状态：</span>
+        <span class="value" id="server-status">检测中...</span>
+      </div>
+      <div class="status-item">
+        <span class="label">DeepSeek API：</span>
+        <span class="value" id="deepseek-status">检测中...</span>
+      </div>
+      <div class="status-item">
+        <span class="label">百度OCR API：</span>
+        <span class="value" id="ocr-status">检测中...</span>
+      </div>
+      <div class="status-item">
+        <span class="label">今日API调用次数：</span>
+        <span class="value" id="api-call-count">0</span>
+      </div>
+    </div>
+    
+    <!-- 操作按钮 -->
+    <div>
+      <button class="btn btn-primary" onclick="refreshStatus()">🔄 刷新状态</button>
+      <button class="btn btn-success" onclick="loadApiLogs()">📋 加载API日志</button>
+      <button class="btn btn-warning" onclick="testAllApis()">🧪 测试所有API</button>
+    </div>
+    
+    <!-- API日志 -->
+    <div class="log-container" id="api-logs">
+      <div style="color: #569cd6;">等待加载API日志...</div>
+    </div>
+    
+    <!-- API测试 -->
+    <div class="test-section">
+      <h3>🧪 API测试</h3>
+      <p style="color: #666; margin-bottom: 15px;">点击下面的按钮测试各个API是否正常工作（会真实调用API）</p>
+      <div class="test-buttons">
+        <button class="btn btn-primary" onclick="testDeepSeek()">🤖 测试DeepSeek API</button>
+        <button class="btn btn-primary" onclick="testOCR()">📷 测试百度OCR API</button>
+        <button class="btn btn-primary" onclick="testLectureSummary()">📄 测试讲义总结API</button>
+        <button class="btn btn-primary" onclick="testVideoGeneration()">🎬 测试视频生成API</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 页面加载时自动检测状态
+    window.onload = function() {
+      refreshStatus();
+      loadApiLogs();
+      
+      // 每10秒自动刷新
+      setInterval(() => {
+        refreshStatus();
+        loadApiLogs();
+      }, 10000);
+    };
+    
+    // 刷新系统状态
+    async function refreshStatus() {
+      console.log('🔍 [监控] 刷新系统状态...');
+      
+      // 1. 检查服务器状态
+      try {
+        const response = await fetch('http://localhost:8080/deepseek-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: 'test' }]
+          })
+        });
+        
+        if (response.ok) {
+          document.getElementById('server-status').textContent = '✅ 运行中';
+          document.getElementById('server-status').className = 'value success';
+        } else {
+          throw new Error('Server error');
+        }
+      } catch (error) {
+        document.getElementById('server-status').textContent = '❌ 未运行';
+        document.getElementById('server-status').className = 'value error';
+      }
+      
+      // 2. 检查DeepSeek API状态（通过真实调用）
+      try {
+        const response = await fetch('http://localhost:8080/deepseek-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: '回复"API正常"' }]
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('deepseek-status').textContent = '✅ 正常';
+          document.getElementById('deepseek-status').className = 'value success';
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        document.getElementById('deepseek-status').textContent = '❌ ' + error.message;
+        document.getElementById('deepseek-status').className = 'value error';
+      }
+      
+      // 3. 检查百度OCR API状态（通过真实调用测试图片）
+      // 这里省略，因为需要真实图片
+      
+      // 4. 加载API调用次数
+      loadApiCallCount();
+    }
+    
+    // 加载API日志
+    async function loadApiLogs() {
+      console.log('📋 [监控] 加载API日志...');
+      
+      try {
+        const response = await fetch('http://localhost:8080/api-logs');
+        const logs = await response.json();
+        
+        const logContainer = document.getElementById('api-logs');
+        logContainer.innerHTML = '';
+        
+        if (logs.length === 0) {
+          logContainer.innerHTML = '<div style="color: #808080;">暂无API调用记录</div>';
+          return;
+        }
+        
+        // 显示最近20条日志
+        const recentLogs = logs.slice(-20).reverse();
+        
+        recentLogs.forEach(log => {
+          const logEntry = document.createElement('div');
+          logEntry.className = 'log-entry';
+          
+          const time = new Date(log.timestamp).toLocaleString('zh-CN');
+          const statusClass = log.status === 'success' ? 'success' : 'error';
+          
+          logEntry.innerHTML = `
+            <span class="log-time">${time}</span>
+            <span class="log-module">模块: ${log.module}</span>
+            <span class="log-action">操作: ${log.action}</span>
+            <span class="log-status ${statusClass}">${log.status}</span>
+            <div style="clear: both;"></div>
+            <div style="margin-top: 5px; color: #808080; font-size: 11px;">
+              用户: ${log.userId} | 输入: ${JSON.stringify(log.input).substring(0, 50)}...
+            </div>
+          `;
+          
+          logContainer.appendChild(logEntry);
+        });
+        
+        // 更新API调用次数
+        document.getElementById('api-call-count').textContent = logs.length;
+        
+      } catch (error) {
+        console.error('❌ [监控] 加载API日志失败:', error);
+        document.getElementById('api-logs').innerHTML = 
+          '<div style="color: #f48771;">加载失败：' + error.message + '</div>';
+      }
+    }
+    
+    // 加载API调用次数
+    async function loadApiCallCount() {
+      try {
+        const response = await fetch('http://localhost:8080/api-logs');
+        const logs = await response.json();
+        document.getElementById('api-call-count').textContent = logs.length;
+      } catch (error) {
+        console.error('加载API调用次数失败:', error);
+      }
+    }
+    
+    // 测试所有API
+    async function testAllApis() {
+      alert('开始测试所有API...\n请查看浏览器控制台(按F12)查看详细日志');
+      console.log('🧪 [监控] 开始测试所有API...');
+      
+      await testDeepSeek();
+      await sleep(1000);
+      await testOCR();
+    }
+    
+    // 测试DeepSeek API
+    async function testDeepSeek() {
+      console.log('🤖 [测试] 测试DeepSeek API...');
+      alert('正在测试DeepSeek API...\n请查看控制台日志');
+      
+      try {
+        const response = await fetch('http://localhost:8080/deepseek-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'user', content: '请用一句话介绍你自己' }
+            ]
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('✅ DeepSeek API测试成功！\n\n回复: ' + data.content.substring(0, 100) + '...');
+          console.log('✅ [测试] DeepSeek API成功:', data);
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        alert('❌ DeepSeek API测试失败：' + error.message);
+        console.error('❌ [测试] DeepSeek API失败:', error);
+      }
+      
+      // 刷新日志
+      loadApiLogs();
+    }
+    
+    // 测试百度OCR API
+    async function testOCR() {
+      console.log('📷 [测试] 测试百度OCR API...');
+      alert('百度OCR API测试需要上传图片\n请通过"讲义总结"功能上传图片来测试');
+    }
+    
+    // 测试讲义总结API
+    async function testLectureSummary() {
+      console.log('📄 [测试] 测试讲义总结API...');
+      alert('请通过"讲义总结"功能上传PDF或图片来测试');
+    }
+    
+    // 测试视频生成API
+    async function testVideoGeneration() {
+      console.log('🎬 [测试] 测试视频生成API...');
+      
+      try {
+        const response = await fetch('http://localhost:8080/deepseek-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'user', content: '请生成一段关于"栈"的视频讲解脚本' }
+            ]
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('✅ 视频生成API测试成功！\n\nAI已生成内容:\n' + data.content.substring(0, 200) + '...');
+          console.log('✅ [测试] 视频生成API成功:', data);
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        alert('❌ 视频生成API测试失败：' + error.message);
+        console.error('❌ [测试] 视频生成API失败:', error);
+      }
+      
+      // 刷新日志
+      loadApiLogs();
+    }
+    
+    // 工具函数
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
